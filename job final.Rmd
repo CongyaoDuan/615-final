@@ -1,0 +1,147 @@
+---
+title: "615 final"
+author: "Congyao Duan"
+date: "2020/12/11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(httr)
+library(jsonlite)
+library(rvest)
+library(tidyverse)
+library(data.table)
+library(DT)
+library(magrittr)
+library(digest)
+library(RPostgreSQL)
+library(tidytext)
+library(config)
+library(tm)
+library(SnowballC)
+library(wordcloud)
+library(RColorBrewer)
+library(RCurl)
+library(stringr)
+library(zoo)
+library(knitr)
+library(tmap)
+library(Rwordseg)
+library(ggplot2)
+library(maps)
+library(wordcloud)
+```
+
+## R Markdown
+
+
+```{r}
+
+gitR <- jsonlite::fromJSON("https://jobs.github.com/positions.json?description=R", flatten=TRUE)
+gitR2 <- jsonlite::fromJSON("https://jobs.github.com/positions.json?description=R&page=2", flatten=TRUE)
+gitR3 <- jsonlite::fromJSON("https://jobs.github.com/positions.json?description=R&page=3", flatten=TRUE)
+gitJa <- jsonlite::fromJSON("https://jobs.github.com/positions.json?description=Java", flatten=TRUE)
+gitJa2 <- jsonlite::fromJSON("https://jobs.github.com/positions.json?description=Java&page=2", flatten=TRUE)
+gitPy <- jsonlite::fromJSON("https://jobs.github.com/positions.json?description=Python", flatten=TRUE)
+gitSq<- jsonlite::fromJSON("https://jobs.github.com/positions.json?description=SQL", flatten=TRUE)
+gitda <- jsonlite::fromJSON("https://jobs.github.com/positions.json?description=data", flatten=TRUE)
+gitda2<- jsonlite::fromJSON("https://jobs.github.com/positions.json?description=data&page=2", flatten=TRUE)
+job1<-rbind(gitR,gitR2,gitR3,gitPy,gitSq,gitJa,gitJa2,gitda,gitda2)
+job1<-job1%>%separate_rows(location,sep=",")
+job1<-job1%>%separate_rows(location,sep="/")
+job1$location<-as.character(job1$location)
+job1$location<-gsub(" ","",job1$location)
+```
+
+```{r}
+data("World")
+World%<>%select(name,geometry)
+World%<>%rename(country.etc=name)
+
+
+data("world.cities")
+world.cities$name<-gsub("'","",world.cities$name)
+world.cities<-world.cities%>%select(name,country.etc)
+world.cities%<>%rename(location=name)
+job1<-left_join(job1,world.cities,by="location")
+```
+
+```{r}
+
+ids <- which(is.na(job1$country.etc))
+job1$country.etc[ids] <- job1$location[ids]
+job1$count<-1
+
+job1$country.etc[which(job1$country.etc=="USA")]<-"United States"
+job1$country.etc[which(job1$country.etc=="UK")]<-"United Kingdom"
+job1$country.etc[which(job1$country.etc=="UnitedStates")]<-"United States"
+job1$country.etc[which(job1$country.etc=="SanFrancisco|Remote(US/Canada)")]<-"United States,Canada"
+
+
+job2<- job1%>% 
+   group_by(country.etc) %>% 
+   summarize(count = sum(count))
+
+World<-left_join(World,job2,by="country.etc")
+World[is.na(World)]<-0
+```
+
+```{r}
+tmap_mode('view')
+tm_shape(World)+tm_polygons("count")
+```
+
+```{r}
+table(job1)
+```
+
+```{r}
+URL = "https://www.indeed.co.uk/jobs?q=data+scientist&l=&start="
+gitR <- jsonlite::fromJSON("DataScientistP1.json", flatten=TRUE)
+ussta<-bind_rows(sapply(ussta,data.frame))
+joblist <<- read_html(URL)
+write.table(job1$description,"d.txt")
+```
+
+```{r}
+word<-read.csv("d.txt")
+word<-gsub("<p>","",word)
+word<-gsub("<li>","",word)
+word<-gsub("<strong>","",word)
+words<-strsplit(word,split = " ")
+words<-unlist(words)
+coun<-table(words)
+coun<-rev(sort(coun))
+count<-data.frame(wo=names(coun),cou=coun)
+```
+
+
+```{r}
+tidy_word<- job1 %>%
+  unnest_tokens(word, description)
+data(stop_words)
+tidy_word <- tidy_word %>%
+   anti_join(stop_words)
+
+tidy_word$word<-gsub("li","",tidy_word$word)
+tidy_word$word<-gsub("ul","",tidy_word$word)
+tidy_word$word<-gsub("und","",tidy_word$word)
+tidy_word$word<-gsub("h2","",tidy_word$word)
+tidy_count<-tidy_word %>%
+   count(word, sort = TRUE)
+
+p1<-tidy_word %>%
+   count(word, sort = TRUE) %>%
+   filter(n > 2000) %>%
+   mutate(word = reorder(word, n)) %>%
+   ggplot(aes(word, n)) +
+   geom_col() +
+   xlab(NULL) +
+   coord_flip()
+
+p2<-wordcloud(tidy_count$word,tidy_count$n,random.order=FALSE,random.color=TRUE,family="myFont")
+
+
+```
+
