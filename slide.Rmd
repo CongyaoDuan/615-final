@@ -1,0 +1,172 @@
+---
+title: "Jobs"
+author:  "Congyao Duan"
+output:
+  revealjs::revealjs_presentation:
+    center: yes
+    theme: moon
+date: "14 December，2020"
+---
+
+```{r setup, include = FALSE}
+library(revealjs)
+knitr::opts_chunk$set(warning = FALSE)
+
+
+```
+
+
+
+<style type="text/css">
+
+  .reveal p {
+
+    text-align: left;
+
+    color: #FFFFFF
+
+  }
+
+  .reveal ul {
+
+    display: block;
+
+  }
+
+  .reveal ol {
+
+    display: block;
+
+  }
+
+  
+
+  body {
+
+  margin: 0;
+
+  background-color: black;
+
+}
+
+
+
+.star {
+
+  position: absolute;
+
+  width: 1px;
+
+  height: 1px;
+
+  background-color: white;
+
+}
+
+</style>
+
+
+
+<script>
+
+const numStars = 200;
+
+
+for (let i = 0; i < numStars; i++) {
+
+  let star = document.createElement("div");  
+
+  star.className = "star";
+
+  var xy = getRandomPosition();
+
+  star.style.top = xy[0] + 'px';
+
+  star.style.left = xy[1] + 'px';
+
+  document.body.append(star);
+
+}
+
+
+function getRandomPosition() {  
+
+  var y = window.innerWidth;
+
+  var x = window.innerHeight;
+
+  var randomX = Math.floor(Math.random()*x);
+
+  var randomY = Math.floor(Math.random()*y);
+
+  return [randomX,randomY];
+
+}
+
+</script>
+
+
+All code is available on[Github]https://github.com/CongyaoDuan/615-final.
+
+
+
+# Introduction
+
+I downloaded information about the job from the Github Jobs API.And I try to analysis the statistical work distribution and the statistical job description.
+
+
+
+# Data
+
+-The website of my data : https://jobs.github.com/api
+
+-It contains information about the location of the jobs,job description,company and some other relevant information
+
+-It contains information relevant to the data analysis jobs
+
+
+
+
+# Data cleaning&Organizing
+
+-Match the city name to the country name
+
+-Add geometry information to the data
+
+-Removed all NA values
+
+-Sort out the irregular area names
+
+-Organize the amount of related work in different areas
+
+## Organized data(statistical jobs distribution)
+
+![Organized data(statistical jobs distribution)](data.png)
+
+## Organized data(statistical jobs distribution)
+
+```{R}
+read.csv("job.csv")
+
+```
+
+# Interactive Map(distribution of statistical jobs)
+
+![Interactive Map(distribution of statistical jobs)](world.png)
+
+# Text mining(Analysis of job description)
+
+## Word frequency
+
+![Word frequency](hist.png)
+
+## Word Cloud
+
+![Word Cloud](word.png)
+
+# shiny
+
+You can get my shiny app from:https://duancyr.shinyapps.io/fitry/
+
+
+# Thanks for watching
